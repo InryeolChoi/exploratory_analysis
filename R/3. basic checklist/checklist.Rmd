@@ -1,0 +1,149 @@
+---
+title: "checklist"
+author: "inryeol"
+date: "2024-08-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **예시 데이터와 질문**
+
+미국 환경부에서 따온 데이터를 가지고 질문 만들기
+
+-   어느 곳의 오염도가 더 심각한가? 동부 vs 서부
+
+좀 더 심도 있게 질문을 만든다면 다음과 같다.
+
+-   시간당 오존 레벨이 평균적으로 높은 곳은? 뉴욕 vs LA
+-   지역 ⇒ 대표성을 띄는 도시로 축소
+
+## 파일 불러오기
+
+```{r}
+ozone = read_csv("../../dataset/hourly_44201_2014_ver2.csv")
+names(ozone) = make.names(names(ozone))
+```
+
+## 초기분석
+
+```{r}
+dim(ozone)
+
+nrow(ozone)
+ncol(ozone)
+
+str(ozone)
+head(ozone)
+tail(ozone)
+```
+
+## 결측값 보기
+
+-   샘플수에 대해서 민감해야 한다.
+-   샘플수가 30개 정도일때 missing이 있으면 값이 확확 줄어들 수 있다.
+
+미국의 hourly ozone data를 보자.
+
+```{r}
+table(ozone$Time.Local)
+```
+
+미국의 주를 기준으로 분석한다고 할 때, 주가 아닌 것들이 있다. 주의 이름을 나열해 이들을 찾아보자.
+
+```{r}
+unique(ozone$State.Name)
+```
+
+## 이상치 확인
+
+데이터의 이상치 확인해보기.
+
+```{r}
+summary(ozone$Sample.Measurement)
+quantile(ozone$Sample.Measurement, seq(0, 1, 0.1))
+```
+
+## 조건 걸고 확인
+
+**오존 레벨 top 10인 지역들을 확인해보자.**
+
+```{r}
+# aggregate 함수로 만들어주기
+ranking = aggregate(Sample.Measurement~State.Name+County.Name, 
+ozone, mean)
+# 이름 바꿔주기 : ozone으로
+names(ranking)[3] = "ozone"
+# ranking의 order 정리
+ranking = ranking[order(ranking$ozone, decreasing=T),]
+```
+
+**How many observations in California, Mariposa?**
+
+```{r}
+# 이름 알아보기
+mariposa.data = ozone[(ozone$State.Name == "California" & 
+ozone$County.Name == "Mariposa"),]
+
+# mariposa의 갯수 알아보기
+nrow(mariposa.data)
+```
+
+**시간 순으로 체크해보자.**
+
+```{r}
+with(mariposa.data, table(Method.Name, Time.Local))
+```
+
+**월별 오존농도를 체크해보자**
+
+```{r}
+ozone$Date.Local = as.Date(ozone$Date.Local)
+ozone$month = factor(months(ozone$Date.Local))
+data = aggregate(Sample.Measurement~month, ozone, mean)
+names(data)[2] = "ozone"
+data
+```
+
+## Challenge Your Solution
+
+부트스트랩 샘플을 이용해 샘플을 뽑아나고, 새 ranking을 만들어보자.
+
+```{r}
+set.seed(10234)
+N = nrow(ozone)
+idx = sample(N, N, replace=T)
+ozone2 = ozone[idx, ]
+```
+
+이후 기존의 ranking과 새 ranking(ranking2)를 붙여보자.
+
+```{r}
+# ranking2 만들기
+ranking2 = aggregate(Sample.Measurement~State.Name + County.Name, 
+ozone2, mean)
+names(ranking2)[3] = "ozone"
+ranking2 = ranking2[order(ranking2$ozone, decreasing=T),]
+
+# ranking, ranking2 붙이고 확인
+cbind(head(ranking, 10), head(ranking2, 10))
+cbind(tail(ranking, 10), tail(ranking2, 10))
+```
+
+# Follow-up question
+
+-   이렇게 했는데 이상한 데이터가 나올 수 있다.
+-   분명히 numeric으로 했는데, text로 나오는 경우
+    -   빈칸 = ND(not detected)로 적은 경우 당연히 numeric으로 인식될 줄 알겠지만, 실제로 보니 char.
+
+1.  필요한 변수가 있는가?
+2.  다른 데이터도 추가로 필요한가?
+3.  올바른 질문인가?
+
+-   EDA의 목표
+    -   데이터에 대해 자료를 다시 확인
+    -   필요하다면 목적에 맞는 데이터를 다시
+    -   iterative process

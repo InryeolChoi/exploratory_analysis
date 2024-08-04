@@ -1,0 +1,86 @@
+---
+title: "files"
+author: "inryeol"
+date: "2024-08-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+# 파일 불러오기
+
+## read 계열 함수
+
+-   보통 대부분의 파일을 이를 통해서 불러들인다.
+-   다음과 같은 두 가지 함수가 존재한다.
+
+```{r}
+data = read.csv("abcde.csv", sep="", header="")
+data2 = read.table("abcde.txt", sep="\t", header=T)
+data3 = read.table("abcde.txt", na.string = "NA")
+```
+
+-   `sep = “,”` : 구분자.
+-   `header = T` : 첫번째 행이 변수명인지 판단
+    -   csv에서는 True
+    -   table에서는 False
+-   `na.string = “A”` : na로 처리된 데이터를 “A”로 변환
+    -   시스템적 결측치 등을 처리할 때 편하다.
+-   `skip = n` : n번째 행을 날리고 변수로 처리
+-   `colClasses =` : 변수의 class를 임의로 다 지정
+    -   class가 잘 맞지 않을 때 조정
+
+## RDS 파일 불러오기
+
+-   r언어 고유의 데이터 확장자인 .rds를 불러올 때 쓰는 방법이다.
+
+```{r pressure, echo=FALSE}
+library(readr)
+readRDS("")
+```
+
+## 엑셀 파일 불러오기
+
+-   엑셀 파일은 R언어에서 잘 지원하지 않음. 즉 새로운 패키지를 써야한다.
+
+```{r}
+install.packages("readxl")
+library(readxl)
+tmp3 = read_excel("abced.xlsx", sheet=1)
+```
+
+# 파일 저장
+
+## RData 파일 저장 & 불러오기
+
+```{r}
+save(tmp3, file="abcde.RData")
+save.image(file="abced.RData")
+
+load("abcde.RData")
+```
+
+-   `save()` : 내가 원하는 데이터만 저장
+-   `save.image()` : 모든 데이터를 저장
+    -   단, 사이즈가 커진다.
+-   `load()` : RData 파일 불러오기
+
+## 내보내기
+
+```{r}
+write.csv(pm25.summary, file="pm25_summary.csv")
+```
+
+## 그림 저장하기
+
+```{r}
+png("example_plot.png", height=960)
+plot(1:10, 1:10, col='red', pch=19)
+
+dev.off()
+```
+
+-   내가 만든 코드의 결과 = 항상 같아야 한다!! (reproducibility)
