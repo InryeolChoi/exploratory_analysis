@@ -1,0 +1,7 @@
+---
+title: "graph_part_1"
+author: "inryeol"
+date: "2024-08-05"
+output: html_document
+---
+
