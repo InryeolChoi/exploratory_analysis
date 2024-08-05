@@ -1,0 +1,214 @@
+---
+title: "graph_analysis"
+author: "inryeol"
+date: "2024-08-05"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+rm(list=ls())
+```
+
+# 변수 가져오기
+
+1.  변수 이름 : pollution
+
+2.  변수들의 타입 지정하기 (순서대로)
+
+    -   numeric, character, factor, numeric, numeric
+
+    ```{r}
+    class = c("numeric", "character", "factor", "numeric", "numeric")
+    pollution = read.csv("../../dataset/avgpm25.csv", colClasses = class)
+    ```
+
+> 이후 구조를 확인한다.
+
+```{r}
+head(pollution)
+str(pollution)
+```
+
+# 1차원 그래프
+
+## 요약통계량
+
+```{r}
+summary(pollution$pm25)
+```
+
+결과
+
+-   크게 기울지는 않았다.
+
+-   상당수가 12를 넘고 있다.
+
+## boxplot
+
+> pollution 중 pm25의 Boxplot을 보자.
+
+```{r}
+boxplot(pollution$pm25, col="blue")
+```
+
+-   여기서 5와 15를 콧수염(whiskers)이라고 한다.
+-   IQR = 사분위간 범위 = (3사분위수) - (1사분위수) = (전체 자료의 중간값)
+-   whiskers를 벗어나는 경우를 이상치(outlier)로 볼 수 있나?
+    -   꼭 그렇지는 않다. 다만 평균에서 먼 자료 정도로 보면 된다.
+
+> pm25가 15보다 큰 케이스를 살펴보자.
+
+```{r}
+# no.1
+with(pollution, head(pm25[pm25 > 15]))
+
+# no.2
+subset(pollution, pm25 > 15)
+
+# no.3
+head(pollution[pollution$pm25 > 15,], 8)
+```
+
+-   지역은 전부 서부라고 나온다.
+-   west이면서 fips 코드 앞자리가 06인 곳 : 캘리포니아
+
+## Histogram
+
+pm25의 히스토그램을 한번 보자.
+
+breaks=100으로 해서 잘게 짜르고, 밀집도를 볼 수 있게 한다.
+
+```{r}
+# hist of PM2.5
+hist(pollution$pm25, col="green", breaks=100)
+rug(pollution$pm25)
+```
+
+## 저수준 그래픽
+
+그래프 위에 무언가를 씌울 때 사용한다.
+
+주로 선을 그려 중위수나 기준을 표기한다.
+
+### 예시 1
+
+pm25의 histogram. 기준선1을 10에, 기준선2를 12에 그려준다.
+
+```{r}
+# hist of PM2.5
+hist(pollution$pm25, col="green")
+abline(v = 12, lwd=2) # 기준치
+abline(v = median(pollution$pm25), col="blue", lwd=4) # 
+```
+
+### 예시 2
+
+pm25의 boxplot. 기준선을 파란색으로, y=12에 그려준다.
+
+```{r}
+# boxplot + abline of pm25
+boxplot(pollution$pm25)
+abline(h = 12) # 기준치
+```
+
+## Barplot
+
+범주형 자료(categorical data)를 정리할 때 좋다.
+
+먼저 table을 써서 정리를 한 다음, barplot을 그려준다.
+
+```{r}
+barplot(table(pollution$region), col="wheat")
+```
+
+**west와 east의 순서를 바꾸고 싶다면?**
+
+-   factor를 다시 지정해야 한다.
+
+```{r}
+pollution$region = factor(pollution$region, levels = c("west", "east"))
+barplot(table(pollution$region), col="purple")
+```
+
+# 2차원 그래픽
+
+## 다차원 boxplot
+
+> 지역별 pm2.5을 도출해보자.
+
+```{r}
+boxplot(pm25~region, data = pollution, col="red")
+```
+
+## 다차원 histogram
+
+> 지역별 pm2.5의 수치를 구해보자.
+
+```{r}
+par(mfrow=c(2,1))
+hist(pollution[pollution$region == "west",]$pm25,
+     col="green")
+hist(pollution[pollution$region == "west",]$pm25,
+     col="green")
+```
+
+## Scatterplot
+
+> latitude에 따른 pm2.5를 구해보자.
+
+```{r}
+plot(pollution$pm25~pollution$latitude,
+     xlab="latitude", ylab="pm25")
+abline(h=12, lty=2)
+```
+
+> **latitude에 따른 pm2.5. 색으로 region 구분해주기**
+
+```{r}
+plot(pollution$pm25~pollution$latitude,
+     xlab="latitude", ylab="pm25",
+     col=pollution$region)
+abline(h=12, lty=2)
+```
+
+> 지역에 따른 구분. latitude별 pm25
+
+```{r}
+par(mfrow=c(1,2), mar=c(5, 4, 2, 1))
+with(subset(pollution, region == "West"),
+     plot(pollution$pm25~pollution$latitude, 
+          main="West", ylab="pm25", 
+          xlab="latitude"))
+with(subset(pollution, region == "East"),
+     plot(pollution$pm25~pollution$latitude, 
+          main="East", ylab="pm25", 
+          xlab="latitude"))
+```
+
+```{r}
+par(mfrow=c(1,2), mar=c(5, 4, 2, 1))
+plot(pm25~latitude,data=pollution[pollution$region=="west",],main="West")
+plot(pm25~latitude,data=pollution[pollution$region=="east",],main="East")
+```
+
+**tip : 여백을 지정할때 mar()을 사용한다.**
+
+# 그래픽용 도구
+
+여러 창을 한번에 띄울때는 다음과 같은 함수를 사용한다.
+
+-   `quartz()` : 맥에서 사용
+
+-   `windows()` : 윈도우에서 사용
+
+-   `x11()` : 리눅스에서 사용
+
+또한 pdf로 저장할 때는 다음과 같은 절차를 따른다.
+
+1.  `pdf()` 함수로 열어준다.
+
+2.  그래프를 편집한다.
+
+3.  `dev.off()`로 닫아준다. (닫아야 그래프 편집내용이 저장.)
