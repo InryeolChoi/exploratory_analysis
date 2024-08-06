@@ -1,0 +1,132 @@
+---
+title: "reStructuring"
+author: "inryeol"
+date: "2024-08-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+# 데이터 재구조화
+
+과연 우리가 탐색하려는 데이터가 제대로 된 것인가? - 데이터가 분석이나 시각화를 위해 필요한 데이터 구조로 딱 맞아떨어지지 않는 경우가 굉장히 많음. - 이때 필요한 것이 데이터를 분석 목적, 기법에 맞게 자유자재로 변형하여 재구조화하는 일! - `melt()`, `cast()`, `merge()`를 사용한다. - `library(reshape)` 가 필요하다.
+
+# 예시 : 데이터 만들기
+
+```{r}
+rm(list=ls())
+library(reshape)
+set.seed(101)
+
+a = 101
+b = 2
+c = 50
+
+x = cbind(rep(1:a, each=2), rep(1:b, times=b), 
+          matrix(rnorm(a*b*c), nrow=a*b))
+datas1 = as.data.frame(x)
+names(datas1) = c("ID", "time", paste(rep(LETTERS[1:25], each=2), 
+                  rep(c(1, 2), times=25), sep="."))
+```
+
+이 데이터의 구조를 보자.
+
+```{r}
+str(datas1)
+```
+
+-   id : 1,2,3으로 구성
+-   time : 1교시, 2교시
+-   A.1 = A반 1번 문항 점수
+
+데이터들의 변수가 너무 많다. (알파벳별, 숫자별로 쪼개짐.)
+
+따라서 이 데이터는 clustering하기 적절하지 않으며, 재구조화가 필요하다.
+
+## melt & cast 이용하기
+
+-   `melt()`를 이용해 ID와 time 외 모든 변수들을 합쳐보자.
+-   남겨놓을 변수는 파라미터 id에 저장한다.
+
+```{r}
+datas2 = melt(datas1,  id=c("ID", "time"))
+head(datas2)
+```
+
+이제, `cast()`를 이용해 다시 데이터를 원래대로 돌려보자.
+
+-   파라미터로 `id+time~variable`
+-   `as.data.frame()`을 앞에 씌워준다.
+-   `head()`, `all.equal()`, `summary()`를 확인해보면 같다는 것을 알 수 있다.
+
+```{r}
+# 생성
+datas3 = as.data.frame(cast(datas2, ID+time~variable))
+
+# 확인하기
+head(datas3[, 1:6])
+all.equal(datas1, datas3)
+summary(datas1-datas3)
+```
+
+## cast의 응용
+
+문항별 평균 점수를 만들어보자.
+
+```{r}
+# cast()를 이용한 문항별 평균점수
+cast(datas2, time~variable, mean)
+
+# with()를 이용한 A.1의 문항별 평균점수
+with(datas1, tapply(A.1, time, mean))
+```
+
+## merge() : 두 데이터프레임 합치기
+
+이번에도 새 데이터프레임을 만들어보자.
+
+```{r}
+v = 5
+x2 = cbind(rep(1:(a-v), each=2), 
+             rep(1:b, times=a-v), 
+             matrix(rnorm((a-v)*b*2), nrow=(a-v)*b))
+datas_svy = as.data.frame(x2)
+names(datas_svy)<-c("ID", "time", "HT", "WT")
+```
+
+만든 새 데이터프레임 datas_svy를 datas1과 비교해보자.
+
+확연히 다른 구조를 가지고 있을 것이다.
+
+```{r}
+dim(datas1)
+dim(datas.svy)
+```
+
+`merge()`를 이용해 두 데이터프레임을 합쳐보자.
+
+-   datas1은 1\~4번째 변수. datas_svy는 그대로.
+-   기준 : ID
+
+```{r}
+merged_1 = merge(datas1[, 1:4], datas_svy, by="ID")
+str(merged_1)
+head(merged_1)
+```
+
+-   datas1은 1\~4번째 변수. datas_svy는 그대로.
+-   기준 : ID, time, x의 모든 파트 살리기
+
+```{r}
+merged_2 = merge(datas1[, 1:4], datas.svy, by=c("ID", "time"),
+                 all.x=T)
+str(merged_2)
+head(merged_2)
+```
+
+```{r}
+names(datas5)[apply(is.na(datas5), 2, sum)>0]
+```

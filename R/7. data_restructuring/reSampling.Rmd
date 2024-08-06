@@ -1,0 +1,92 @@
+---
+title: "reSampling"
+author: "inryeol"
+date: "2024-08-06"
+output: html_document
+---
+
+## 통계의 목표
+
+-   하나의 샘플을 모집단을 뽑고, 중복을 허용해 똑같은 통계량을 계산.
+-   이 기법을 resampling이라고 하고, 대표적인 resampling 기법으로 bootstrap 기법이 있다.
+
+## bootstrap vs 모집단
+
+-   부트스래핑으로 그래프 그려보면 정규분포와 상당히 유사하다.
+-   이론적으로는 중심극한정리(CLT)에 의해 성립.
+-   vec[1] ⇒ 10000번 반복해서 나온 것.
+
+## 부트스트래핑의 장점
+
+-   정규분포를 응용해 여러 통계량을 구할 수 있다.
+-   ex) mean, 중위수, 분산, 신뢰구간 등등…
+
+## 만들고 비교해보기
+
+### 준비과정
+
+-   시드 값은 101
+-   추출횟수 x = 7, 벡터의 크기 n = 1000
+-   1번째 벡터 = original
+-   2번째 벡터 = bootstrap
+
+```{r}
+rm(list=ls())
+set.seed(101)
+
+x = 7 # 추출 횟수
+n = 1000 # 벡터의 크기
+original = rep(NA, n) # 빈 벡터 제작
+bootstrap = rep(NA, n) # 빈 벡터 제작
+```
+
+### 추출 및 삽입과정
+
+-   `for` 문을 사용한다.
+-   original = 반복할 때마다 모집단에서 n번 추출. `data_A` 사용
+-   sample = 모집단 추출 1번. 내부 복원 n번 추출. `data_B` 사용
+-   모집단 추출은 균등분포 사용
+-   내부 추출은 `sample.int(추출횟수, replace=T)` 로 사용
+-   해답
+
+```{r}
+# original: 반복할 때마다 모집단에서 추출
+for(i in 1:n){
+    data_A = runif(x)
+    original[i] = sd(data_A)
+}
+
+# sample : 모집단 추출 1번. 이후 내부에서 추출
+data_B = runif(x)
+for(i in 1:n){
+    sample = data_B[sample.int(x, replace=T)]
+    bootstrap[i] = sd(sample)
+}
+```
+
+### 결과 비교하기
+
+> summary, 그래프, 사분위수 비교하기
+
+```{r}
+# 요약치 비교하기
+summary(original)
+summary(bootstrap)
+
+# 그래프로 비교하기
+par(mfrow=c(1,2))
+hist(original)
+hist(bootstrap)
+
+# 사분위수 비교하기
+quantile(original, prob=c(0.025, 0.975))
+quantile(bootstrap, prob=c(0.025, 0.975))
+```
+
+### 신뢰구간 구하기
+
+```{r}
+## 95% 신뢰수준
+mean(data_A)-qnorm(0.975)*sqrt(var(data_A))/sqrt(x)
+mean(data_A)+qnorm(0.975)*sqrt(var(data_A))/sqrt(x)
+```
