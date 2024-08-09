@@ -49,7 +49,7 @@ for(i in 1:40){
     
     ## coin이 앞면일 경우, 패턴 추가
     if (coinflip){
-       dataMatrix[i, ] = dataMatrix[i, ] + rep(c(0, 3), each=5) 
+       dataMat[i, ] = dataMat[i, ] + rep(c(0, 3), each=5) 
     }
 }
 ```
@@ -58,7 +58,7 @@ for(i in 1:40){
 
 ```{r}
 # 히트맵 그리기
-image(1:10, 1:40, t(dataMat)[, nrow(dataMatrix):1])
+image(1:10, 1:40, t(dataMat)[, nrow(dataMat):1])
 
 # 클러스터링 해보기
 heatmap(dataMat)
@@ -122,20 +122,21 @@ PCA란? 데이터 특성을 나타내는 공분산행렬을 분해해 일부를 
 
 ## PCA의 원리
 
-1. 표본 공분산행렬 A를 만든다.
-2. A를 대각행렬 L로 만든다.
-3. A의 대각원소 중 일부를 뽑아서 $A_d$를 만든다.
-4. 원래 데이터인 $X_c$와 $A_d$를 곱해서 $Z_d$를 만든다.
-    
+1.  표본 공분산행렬 A를 만든다.
+2.  A를 대각행렬 L로 만든다.
+3.  A의 대각원소 중 일부를 뽑아서 $A_d$를 만든다.
+4.  원래 데이터인 $X_c$와 $A_d$를 곱해서 $Z_d$를 만든다.
+
 ## PCA의 특징
-- 변수들 간의 선형관계가 강해야 PCA는 잘 작동한다.
-- X들이 correlation이 강하지 않으면 의미가 없다.
-- 설문조사처럼 모든 변수들이 같은 수준으로 점수화가 된 경우에는 공분산 행렬을 사용
-- 그러나 변수들의 scale이 서로 많이 다른 경우에는 값이 큰 특정 변수가 전체적인 경향을 좌우
-    - 따라서 이때는 상관계수 행렬을 사용하여 추출해야 한다.
-    - R에서는 `prcomp(scale=T)` 로 만들면 됨.
-    - 대부분의 예시에서 상관계수 행렬과 공분산 행렬을 동시에 놓고 비교!
-- 축소한 만큼의 손실(표현하지 못하는 분산)은 당연히 발생한다.
+
+-   변수들 간의 선형관계가 강해야 PCA는 잘 작동한다.
+-   X들이 correlation이 강하지 않으면 의미가 없다.
+-   설문조사처럼 모든 변수들이 같은 수준으로 점수화가 된 경우에는 공분산 행렬을 사용
+-   그러나 변수들의 scale이 서로 많이 다른 경우에는 값이 큰 특정 변수가 전체적인 경향을 좌우
+    -   따라서 이때는 상관계수 행렬을 사용하여 추출해야 한다.
+    -   R에서는 `prcomp(scale=T)` 로 만들면 됨.
+    -   대부분의 예시에서 상관계수 행렬과 공분산 행렬을 동시에 놓고 비교!
+-   축소한 만큼의 손실(표현하지 못하는 분산)은 당연히 발생한다.
 
 ## 예시 1: 패턴 1개
 
@@ -160,33 +161,41 @@ image(t(approx)[, nrow(approx):1], main = "Approximated Matrix")
 
 이때, 데이터의 첫 번째 분산이 전체 분산을 얼마나 반영하는지 살펴보자.
 
-1. 기존 데이터를 0과 1로만 이뤄진 데이터로 바꾼다.
-2. “특이값(전체 분산)” vs “설명된 분산의 비율” 비교
-3. 시각화
+1.  기존 데이터를 0과 1로만 이뤄진 데이터로 바꾼다.
+2.  “특이값(전체 분산)” vs “설명된 분산의 비율” 비교
+3.  시각화
+
 ```{r}
 # 0, 1로만 이뤄진 데이터 만들기
-const = Ordered * 0
+const = ordered * 0
 for (i in 1:dim(ordered)[1]) {
      const[i, ] <- rep(c(0, 1), each = 5)
-
+}
 svd2 <- svd(const)
+```
 
-# 데이터 비교!
-windows()
-par(mfrow=c(1, 3))
-image(t(const)[, nrow(const):1], 
-      main="original data")
-plot(svd2$d, xlab = "열", ylab = "특이값", 
-     pch = 19)
-plot(svd2$d^2/sum(svd2$d^2), xlab = "열", 
-     ylab = "설명된 분산비율", pch = 19)
+```{r}
+## 데이터 비교용 함수
+
+compare_data = function(const, svd2) {
+  par(mfrow=c(1, 3))
+  image(t(const)[, nrow(const):1], 
+        main="original data")
+  plot(svd2$d, xlab = "열", ylab = "특이값", 
+       pch = 19)
+  plot(svd2$d^2/sum(svd2$d^2), xlab = "열", 
+       ylab = "설명된 분산비율", pch = 19)
+}
+
+compare_data(const, svd2);
 ```
 
 ### 비교: PCA vs SVD
 
-이렇게 만들어진 SVD의 특이값 = PCA의 주성분! 
+이렇게 만들어진 SVD의 특이값 = PCA의 주성분!
 
 `plot()`으로 확인해보자.
+
 ```{r}
 # pca와 svd 만들기
 svd1 = svd(scale(ordered))
@@ -204,6 +213,7 @@ abline(c(0,1))
 패턴이 2개 이상인 데이터 역시 svd를 통해 패턴을 발견할 수 있다.
 
 먼저 패턴 2개를 넣은 새 데이터를 만들어보자.
+
 ```{r}
 # 데이터 만들기
 set.seed(678910)
@@ -227,9 +237,10 @@ ordered2 = dataMat2[hh2$order, ]
 ```
 
 데이터와 각 패턴의 모습은 다음과 같다.
+
 ```{r}
 # 시각화
-windows()
+# windows()
 par(mfrow=c(1,3))
 image(t(ordered2)[, nrow(ordered2):1])
 plot(rep(c(0, 1), each=5), pch=19, 
@@ -246,7 +257,7 @@ plot(rep(c(0, 1), 5), pch=19,
 
 ```{r}
 svd3 = svd(scale(ordered2))
-windows()
+# windows()
 par(mfrow=c(1, 2))
 plot(svd3$v[, 1], pch=19, xlab="column",
      ylab="1st right singular vector")
@@ -257,6 +268,7 @@ plot(svd3$v[, 2], pch=19, xlab="column",
 ### 설명된 분산
 
 여기서도 설명된 분산의 비율을 확인해보자.
+
 ```{r}
 par(mfrow=c(1, 2))
 plot(svd3$d, pch=19,
@@ -265,20 +277,19 @@ plot(svd3$d^2/sum(svd3$d^2), pch=19,
      xlab="column", ylab="percent of var. explained")
 ```
 
-
 ## 예시 3: 얼굴 데이터
 
 얼굴 데이터를 SVD해서 원래 결과와 비슷한지 확인해보자.
 
 이는 통계 데이터를 PCA하는 것 같은 과정이다.
 
-- 얼굴데이터 : 일부만 시각화 → 전체 데이터와 비슷
-- 통계데이터 : 일부만 뽑아내기 → 전체 데이터와 비슷.
+-   얼굴데이터 : 일부만 시각화 → 전체 데이터와 비슷
+-   통계데이터 : 일부만 뽑아내기 → 전체 데이터와 비슷.
 
 얼굴 데이터를 살펴보고, scree plot을 그려보자.
 
 ```{r}
-load("face.rda")
+load("../../dataset/face.rda")
 par(mfrow=c(1,1))
 
 # 얼굴 보기
@@ -290,12 +301,14 @@ u = svd_face$u
 d = svd_face$d
 v = svd_face$v
 
-svd_faceplot(d^2/sum(d^2), pch=19, 
+svd_face
+plot(d^2/sum(d^2), pch=19, 
      xlab="Singular Vector", 
      ylab="Var. explained")
 ```
 
 특이값의 갯수를 다르게 해보며 얼굴이 원래와 비슷해지는지 보자.
+
 ```{r}
 # 다양한 근사행렬
 approx1 = u[, 1] %*% t(v[, 1]) * d[1]
@@ -303,7 +316,7 @@ approx5 = u[, 1:5] %*% diag(d[1:5]) %*% t(v[, 1:5])
 approx10 = u[, 1:10] %*% diag(d[1:10]) %*% t(v[, 1:10])
 
 # 얼굴 시각화
-windows()
+# windows()
 par(mfrow=c(1, 4))
 image(t(approx1)[, nrow(approx1):1], main="1 vector")
 image(t(approx5)[, nrow(approx5):1], main="5 vector")
@@ -311,24 +324,17 @@ image(t(approx10)[, nrow(approx10):1], main="10 vector")
 image(t(faceData)[, nrow(faceData):1], main="origin")
 ```
 
-
 # FA: 요인분석
 
-- 목적은 차원축소이고, outcome이 여러개.
-- 기존 변수 m개의 정보를 담을 수 있는 새 변수 n개를 만든다.
-    - 기존 변수에 무언가를 더하고 곱해서 새 변수를 만든다.
-    - ex. 국, 수, 사, 과, 영 ⇒ 암기력, 학습능력 측정.
-    
+-   목적은 차원축소이고, outcome이 여러개.
+-   기존 변수 m개의 정보를 담을 수 있는 새 변수 n개를 만든다.
+    -   기존 변수에 무언가를 더하고 곱해서 새 변수를 만든다.
+    -   ex. 국, 수, 사, 과, 영 ⇒ 암기력, 학습능력 측정.
+
 ## FA의 원리
 
-$$
-X_{i1} - \mu_{i1} = \lambda_{11}f_{i1} + \cdots + \lambda_{11}f_{id} + 
-\epsilon_{i1} \\
-\vdots
-\\
-X_{ip} - \mu_{ip} = \lambda_{p1}f_{i1} + \cdots + \lambda_{p1}f_{id} + 
-\epsilon_{ip}
-
+$$ 
+X\_{i1} - \mu\*{i1} =\* \lambda{11}f\_{i1} + \cdots + \lambda\*{11}f*{id} +* \epsilon\*{i1} \\ \vdots \\ X{ip} - \mu\*{ip} =\* \lambda{p1}f\_{i1} + \cdots + \lambda\*{p1}f\*{id} + \epsilon\_{ip}
 $$
 
 $$
@@ -337,13 +343,13 @@ $$
 
 요인분석 식을 만들어보면, 다음과 같은 변수 4개가 존재한다.
 
-- $X_{ij}$ : 관찰변수 = **줄여야 하는 기존 변수**.
-- $f_{in}$ :  잠재변수 (common factors), 요인, 인자 = **만들어야 하는 새 변수**
-    - 아직 무슨 값을 가졌는지 모르니까 분포를 가진다.
-- $\lambda_{ij}$ :  요인적재량 (factor loadings) = 잠재변수가 관찰변수에 미치는 **가중치**.
-    - 보통 0 아니면 1 이라고 가정한다.
-- $\epsilon_{ij}$ : 특정변수 (specific factors)
-    - 서로 상관관계가 없고, 잠재변수하고도 상관관계가 없다.
+-   $X_{ij}$ : 관찰변수 = **줄여야 하는 기존 변수**.
+-   $f_{in}$ : 잠재변수 (common factors), 요인, 인자 = **만들어야 하는 새 변수**
+    -   아직 무슨 값을 가졌는지 모르니까 분포를 가진다.
+-   $\lambda_{ij}$ : 요인적재량 (factor loadings) = 잠재변수가 관찰변수에 미치는 **가중치**.
+    -   보통 0 아니면 1 이라고 가정한다.
+-   $\epsilon_{ij}$ : 특정변수 (specific factors)
+    -   서로 상관관계가 없고, 잠재변수하고도 상관관계가 없다.
 
 이때, 새 변수(관찰변수)의 분산 $Var(X_{i})$은 얼마일까?
 
@@ -361,7 +367,10 @@ Var(X_{i}) &=
 \end{align*}
 $$
 
+
+## 행렬형태
 모든 변수를 다 담는 행렬 형태로 다시 써보면 다음과 같다.
+
 
 $$
 \begin{align*}
@@ -380,40 +389,42 @@ var(\mathbf{\epsilon_i})
 
 S &= \mathbf{\hat\Lambda \cdot \hat\Lambda^t + \hat\psi}
 \end{align*}
+
 $$
 
 공분산행렬 S에서 우리가 모르는 변수 2개를 보자.
 
-1. 오차변수의 공분산행렬 $\hat \psi$
-    - $\hat \psi$을 대각행렬(diagonal matrix)라고 가정.
-    - 왜? 그래야 $\mathbf{x}$들끼리의 분산을 $\mathbf{\Lambda}$로 설명 가능.
-2. 요인행렬 $\mathbf{\hat\Lambda}$ 
-    - 요인적재량을 모은 것으로, 변수 간의 상관관계를 설명한다.
-    - 문제는 $\mathbf{f_i}$도 일종의 확률변수. 만약 $\lambda \cdot R \cdot R^{-1} \cdot \mathbf{f_i}$를 하면, 값이 달라짐. 따라서 값이 한개가 아님. 이 상태에서는 관찰변수들과 잠재변수들 사이의 관계가 명확하지 않음.
-    - 따라서 이를 회전시켜야 함. (= 분산 재분배)
+1.  오차변수의 공분산행렬 $\hat \psi$
+    -   $\hat \psi$을 대각행렬(diagonal matrix)라고 가정.
+    -   왜? 그래야 $\mathbf{x}$들끼리의 분산을 $\mathbf{\Lambda}$로 설명 가능.
+2.  요인행렬 $\mathbf{\hat\Lambda}$
+    -   요인적재량을 모은 것으로, 변수 간의 상관관계를 설명한다.
+    -   문제는 $\mathbf{f_i}$도 일종의 확률변수. 만약 $\lambda \cdot R \cdot R^{-1} \cdot \mathbf{f_i}$를 하면, 값이 달라짐. 따라서 값이 한개가 아님. 이 상태에서는 관찰변수들과 잠재변수들 사이의 관계가 명확하지 않음.
+    -   따라서 이를 회전시켜야 함. (= 분산 재분배)
 
 **요인행렬의 회전**
 
-1. Varimax (직교회전)
-    - 요인 간 상관성이 없다고 가정
-    - 좌표축의 각도를 정확히 90도로 유지하여 회전
-    - 요인행렬 각 열의 분산을 최대화하는 기법
-    - 큰 값은 더 크게, 작은 값은 더 작게
-2. Promax (사각회전)
-    - 요인 간 상관성이 있다고 가정
-    - 좌표축의 각도가 90도가 되지 않도록 회전
-    - 추출한 요인들 간 상관관계를 다시 설명해야 함.
-    - 요인 간 군집관계를 잘 설명.
-    
+1.  Varimax (직교회전)
+    -   요인 간 상관성이 없다고 가정
+    -   좌표축의 각도를 정확히 90도로 유지하여 회전
+    -   요인행렬 각 열의 분산을 최대화하는 기법
+    -   큰 값은 더 크게, 작은 값은 더 작게
+2.  Promax (사각회전)
+    -   요인 간 상관성이 있다고 가정
+    -   좌표축의 각도가 90도가 되지 않도록 회전
+    -   추출한 요인들 간 상관관계를 다시 설명해야 함.
+    -   요인 간 군집관계를 잘 설명.
+
 ## 예제 1: 주식 데이터
 
 **데이터 불러오기 & 편집**
 
-1. 데이터를 불러온다.
-2. 상관계수 행렬을 만들어준다. `prcomp(~~, scale = T)` 로 해줘도 된다.
+1.  데이터를 불러온다.
+2.  상관계수 행렬을 만들어준다. `prcomp(~~, scale = T)` 로 해줘도 된다.
+
 ```{r}
 # 데이터 불러오기
-load("stockreturns.RData")
+load("../../dataset/stockreturns.RData")
 
 # 표준화된 행렬 만들기
 mu = matrix(apply(stocks, 2, mean), dim(stocks)[1], dim(stocks)[2], byrow=T)
@@ -426,26 +437,27 @@ stocks_new = (stocks - mu) / sig
 
 PCA 작업을 해주고, 시각화를 시켜보자.
 
- `screeplot()`과 `biplot()` 을 이용한다.
+`screeplot()`과 `biplot()` 을 이용한다.
 
-Scree Plot 이란? 
+Scree Plot 이란?
 
-- PCA 분석 후 주성분 수를 선정하기 위해 쓰는 차트
-- 고유값-주성분의 분산 변화를 보여준다.
-- 고유값 변화율이 완만해지는 부분이 필요한 주성분의 수이다.
+-   PCA 분석 후 주성분 수를 선정하기 위해 쓰는 차트
+-   고유값-주성분의 분산 변화를 보여준다.
+-   고유값 변화율이 완만해지는 부분이 필요한 주성분의 수이다.
+
 ```{r}
 # pca 작업 실행
 stock_pca1 = prcomp(stocks)
 stock_pca2 = prcomp(stocks_new)
 
 # screeplot
-windows()
+# windows()
 par(mfrow=c(1, 2))
 screeplot(stock_pca1)
 screeplot(stock_pca2)
 
 # biplot()
-windows()
+# windows()
 par(mfrow=c(1, 2))
 biplot(stock_pca1, 1:2)
 abline(h=0, lty=3, col='red')
@@ -460,14 +472,12 @@ abline(v=0, lty=3, col='red')
 
 biplot이란? 각 개체들의 첫번째 주성분(=행), 두번째 주성분(=열) 값을 나타내는 행렬도를 시각화 한것
 
-1. 숫자는 데이터 그 자체를 의미
-2. Biplot 그림에서 화살표는 원변수와 PC의 상관계수를 뜻하며, 
-PC와 평행할수록 해당 PC에 큰 영향.
-3. 화살표 벡터의 길이가 원변수의 분산을 표현하며, 길수록 분산이 크다.
+1.  숫자는 데이터 그 자체를 의미
+2.  Biplot 그림에서 화살표는 원변수와 PC의 상관계수를 뜻하며, PC와 평행할수록 해당 PC에 큰 영향.
+3.  화살표 벡터의 길이가 원변수의 분산을 표현하며, 길수록 분산이 크다.
 
 ```{r}
-windows()
-quartz()
+# windows()
 with(stock_pca1, plot(rotation[, 1], rotation[, 2], type='n', xlab='PC1', ylab='PC2'))
 with(stock_pca1, text(rotation[, 1], rotation[, 2], 1:10))
 abline(h=0, lty=3, col='red')
@@ -476,15 +486,14 @@ abline(v=0, lty=3, col='red')
 
 **결과 해석**
 
-- PC1에 가장 많은 영향을 미치는 요인은 comp1이다.
-- PC2에 가장 많은 영향을 미치는 요인은 comp10이다.
-- 가장 분산이 큰 애는 comp4이다.
+-   PC1에 가장 많은 영향을 미치는 요인은 comp1이다.
+-   PC2에 가장 많은 영향을 미치는 요인은 comp10이다.
+-   가장 분산이 큰 애는 comp4이다.
 
 **생각해봐야 할 것**
 
-- 주성분분석의 대상인 변수의 선정
-- 제1주성분의 정의
-
+-   주성분분석의 대상인 변수의 선정
+-   제1주성분의 정의
 
 **FA로 분석하기**
 
@@ -493,6 +502,7 @@ abline(v=0, lty=3, col='red')
 첫번째 4개 회사는 기술기업, 3개는 투자은행, 3개는 리테일.
 
 **데이터 준비**
+
 ```{r}
 kval = 3
 stock_fa = factanal(stocks_new, kval, rotation="none", score="reg")
@@ -505,6 +515,7 @@ stock_fa2 = factanal(stocks_new, kval, rotation="none")
 ```
 
 요인분석의 상관관계와 원 데이터의 상관관계를 보자.
+
 ```{r}
 # 비교1 : 요인분석의 상관관계 vs 원 상관관계
 all.equal(stock_fa$correlation, cor(stocks))
@@ -516,6 +527,7 @@ all.equal(x1-x2, stock_fa$uniquenesses)
 ```
 
 회전행렬을 만들어보자.
+
 ```{r}
 # 회전행렬 만들기
 stock_fa_R1 = factanal(stocks_new, kval, rotation="varimax")
@@ -523,6 +535,7 @@ stock_fa_R2 = factanal(stocks_new, kval, rotation="promax")
 ```
 
 이후 시각화를 해보자.
+
 ```{r}
 ## 텍스트
 text = "Stocks (No rotation)"
@@ -530,7 +543,7 @@ text2 = "Stocks (Varimax)"
 text3 = "Stocks (Promax)"
 
 ## 새 창 만들기 
-windows()
+# windows()
 par(mfcol=c(2,3))
 
 # 회전없이 갈 때
@@ -576,51 +589,57 @@ abline(h=0)
 
 **결과 해석**
 
-1. factor 2의 관점에서 보자. rotation을 해보면 리테일이 두드러져 보인다.
-    
+1.  factor 2의 관점에서 보자. rotation을 해보면 리테일이 두드러져 보인다.
+
     factor 2가 리테일에 관련된 잠재요인임을 알 수 있다.
-    
-2. factor 3의 관점에서 보자. rotation을 해보면, 투자은행이 두드러져 보인다.
-    
+
+2.  factor 3의 관점에서 보자. rotation을 해보면, 투자은행이 두드러져 보인다.
+
     factor 3가 투자은행에 관련된 잠재요인임을 알 수 있다.
-    
 
 이러한 factor를 찾아냄으로써 연관된 (=같이 움직이는) 변수들을 찾을 수 있다.
 
-- 추정된 람다를 바탕으로 factor score을 찾아냄.
+-   추정된 람다를 바탕으로 factor score을 찾아냄.
+
 ```{r}
 cor(stock_fa$scores)
 ```
 
-- factor가 많으면 많을수록, 설명은 잘 되나 해석하기 힘듬
-- factor가 너무 적으면, 관계 설명이 너무 어려워짐.
-
+-   factor가 많으면 많을수록, 설명은 잘 되나 해석하기 힘듬
+-   factor가 너무 적으면, 관계 설명이 너무 어려워짐.
 
 # 정리 : PCA vs FA
 
-- 주성분분석 : hclustering과 비슷.
-- 요인분석 : d를 지정한다. k-means와 비슷
-- FA: 모델링 베이스. 안되는 걸 전부 error term으로
-    - $\mu$, $\Lambda$를 estimation
-    - 결과를 하나 잡고, 제일 좋은 것을 선택.
-        
-        차원은 2개야! ⇒ 확인!
-        
-    - 따라서 답이 달라질 수 있음.
-- PCA: 분해 베이스. 수학적 방법을 사용
-    - 행렬의 trace와 eigenvalue 사용
-    - 결과는 나와있고, 이중에서 고르기
-        
-        차원 중 3개를 잡자! ⇒ 확인!
-        
-    - 따라서 답이 항상 1개
+-   주성분분석 : hclustering과 비슷.
 
-- SVD, PCA, FA 모두 변수들을 줄이는 것이 목표.
-    
+-   요인분석 : d를 지정한다. k-means와 비슷
+
+-   FA: 모델링 베이스. 안되는 걸 전부 error term으로
+
+    -   $\mu$, $\Lambda$를 estimation
+
+    -   결과를 하나 잡고, 제일 좋은 것을 선택.
+
+        차원은 2개야! ⇒ 확인!
+
+    -   따라서 답이 달라질 수 있음.
+
+-   PCA: 분해 베이스. 수학적 방법을 사용
+
+    -   행렬의 trace와 eigenvalue 사용
+
+    -   결과는 나와있고, 이중에서 고르기
+
+        차원 중 3개를 잡자! ⇒ 확인!
+
+    -   따라서 답이 항상 1개
+
+-   SVD, PCA, FA 모두 변수들을 줄이는 것이 목표.
+
     변수를 줄인다 = 연관성이 높은 변수를 찾아서 지울 것을 지운다.
-    
-- **따라서, 먼저 표본공분산을 보면서 상관관계가 있는지를 봐야 함!**
-    
+
+-   **따라서, 먼저 표본공분산을 보면서 상관관계가 있는지를 봐야 함!**
+
     상관관계가 없으면 차원축소를 하는 의미가 없다.
-    
+
     **상관관계가 있다 = 정보가 중복되어 있다.**
