@@ -3,8 +3,7 @@
 ##### environmental data
 ### 데이터 준비
 rm(list=ls())
-setwd("C:/Users/dlsfu/Desktop/EDA_rawData")
-load("environmental.Rdata")
+load("../../dataset/environmental.Rdata")
 ls()
 str(data)
 attach(data)
@@ -46,8 +45,7 @@ detach(data)
 ### 데이터 준비
 dev.off()
 rm(list=ls())
-setwd("C:/Users/dlsfu/Desktop/EDA_rawData")
-load("galaxy.Rdata")
+load("../../dataset/galaxy.Rdata")
 str(data)
 attach(data)
 
@@ -76,13 +74,3 @@ contour(sort_ew, sort_ns, pred_val,
         nlevels=15, main="Contour plot of loess fit to Velocity", xlab=t1, ylab=t2)
 
 detach(data)
-
-
-
-
-
-
-
-
-
-

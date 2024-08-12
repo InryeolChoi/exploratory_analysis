@@ -1,0 +1,137 @@
+---
+title: "smoothPlot"
+author: "inryeol"
+date: "2024-08-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+# 비선형추정 (1)
+
+## spline 기법
+-   구간을 나눠서 직선을 피팅하는 방법
+  -   단점1: 미분이 안된다.
+  -   단점2: 각 구간별 직선이 로컬(local) 하게 적용된다.
+-   즉, knot (갈라지는 점)에 따라 너무 모양이 많이 달라진다.
+
+그래서, Spline을 강화시켜야 한다.
+- knot의 갯수를 잘 조절해야 한다. 
+- 이를 smoothing scatterplot (산점도 평활화) 이라고 한다.
+
+## loess procedures
+-   local regression의 약자.
+-   데이터의 어떤 점을 기준으로 그 근방의 값(local)에 대해 회귀
+-   g를 추정하는 방법 : 모수와 SSE를 이용한다.
+
+$$
+y_i = g(x_i) + \epsilon
+$$
+
+-   대표적인 산점도 평활화 기법.
+    1.  윈도우를 이용해 구간을 설정
+    2.  함수를 피팅 (윈도우가 클 수록 차수가 늘어난다)
+    3.  피팅된 선들의 평균을 구한다.
+    4.  평균들을 연결!
+
+그런데 윈도우가 너무 크면, 이상한 직선이 생길 수 있다.
+- 이를 피하는 방법 : 가중치를 적게 주면 가능하다.
+- 가중치 = 거리의 절댓값의 역수.
+- knot ($x_0$)을 계속 이동시켜 전체적인 curve를 그리는 것이 목표
+
+# 예시 (1)
+## 데이터 준비
+```{r}
+load("../../dataset/environmental.Rdata")
+ls()
+str(data)
+attach(data)
+
+# loess fit
+x = 2/3
+y = 1
+data_loess = loess(Ozone~Temperature, 
+                   span=x, degree=y)
+```
+
+## 산점도 그리기
+```{r}
+# 산점도 그리기
+# windows()
+plot(Temperature, Ozone, pch=16, 
+     main="Environmental Data", 
+     xlab="온도(F)", ylab="Ozone(PPB)", 
+     axes=F, xlim=c(55, 100), ylim=c(0, 180))
+axis(1, seq(55, 100, by=5), seq(55, 100, by=5))
+axis(2, seq(0, 180, by=20), seq(0, 180, by=20))
+ord_temp = order(Temperature)
+lines(Temperature[ord_temp], fitted(data_loess)[ord_temp], lwd=2)
+detach(data)
+```
+
+## 결과해석 : 직선 fit vs loess fit
+
+1. loess fit
+    - 일반적인 직선보다 더 분포를 잘 반영한다.
+    - 단, loess는 정렬을 하지 않으면 데이터가 엉망이 된다.
+2. 이웃의 넓이에 따른 loess fit의 차이
+    - 구간이 넓으면 좀 더 smooth한 곡선이 그려진다.
+
+## 신뢰구간
+* 잭나이프법이나 부트스트래핑을 이용, 신뢰구간을 구하는 것
+* 완벽한 신뢰구간을 구할 수 없는 loess 기법에서 자주 사용한다.
+```{r}
+sample_data = sample(data_loess$y, 30, replace=TRUE)
+n = length(sample_data) # 반복횟수
+x = 50000 # 부트스트랩 반복횟수
+
+resamples = matrix(sample(sample_data, n*x, replace=TRUE))
+
+means = apply(resamples, 1, mean) # 샘플별 평균
+
+quantile(means, c(0.025, 0.975))
+```
+
+
+# 예시 (2)
+
+
+```{r}
+rm(list=ls())
+load("../../dataset/galaxy.Rdata")
+str(data)
+attach(data)
+
+# loess fit
+galaxy_loess = loess(Velocity~EastWest*NorthSouth, span=0.25, degree=2)
+```
+
+## 조건부 산점도
+```{r}
+# NorthSouth를 조건부로 loess fit 그리기
+t1 = "East-West Coordinate (arcsec)"
+t2 = "Given: North-South Coordinate (arcsec)"
+coplot(Velocity~EastWest|NorthSouth, 
+       panel = function(x, y, col, pch){
+           idx = order(x)
+           points(x, y, pch=pch, col=col)
+           lines(x[idx], predict(loess(y~x))[idx], lwd=2, col=4)
+       }, xlab=c(t1, t2), ylab="Velocity")
+```
+
+## 등고선 그리기
+
+```{r}
+# 등고선 그리기
+sort_ew = sort(EastWest)
+sort_ns = sort(NorthSouth)
+pred_val = predict(galaxy_loess, expand.grid(data.frame(EastWest=sort_ew, NorthSouth=sort_ns)))
+
+contour(sort_ew, sort_ns, pred_val, 
+        nlevels=15, main="Contour plot of loess fit to Velocity", xlab=t1, ylab=t2)
+
+detach(data)
+```
