@@ -1,12 +1,17 @@
-# 15. 평활화기법
-
-##### environmental data
-### 데이터 준비
+# 데이터 준비
 rm(list=ls())
 load("../../dataset/environmental.Rdata")
 ls()
 str(data)
 attach(data)
+
+# 그래프 함수
+external_graph = function() {
+    os = Sys.info()["sysname"]
+    if (os == "Linux") {x11()}
+    else if (os == "Darwin") {quartz()}
+    else if (os == "Windows") {windows()}
+}
 
 # loess fit
 x = 2/3
@@ -16,7 +21,7 @@ data_loess = loess(Ozone~Temperature,
 
 
 # 산점도 그리기
-windows()
+external_graph()
 plot(Temperature, Ozone, pch=16, 
      main="Environmental Data", 
      xlab="온도(F)", ylab="Ozone(PPB)", 
@@ -55,7 +60,7 @@ galaxy_loess = loess(Velocity~EastWest*NorthSouth, span=0.25, degree=2)
 # NorthSouth를 조건부로 loess fit 그리기
 t1 = "East-West Coordinate (arcsec)"
 t2 = "Given: North-South Coordinate (arcsec)"
-windows()
+external_graph()
 coplot(Velocity~EastWest|NorthSouth, 
        panel = function(x, y, col, pch){
            idx = order(x)
@@ -69,7 +74,7 @@ sort_ew = sort(EastWest)
 sort_ns = sort(NorthSouth)
 pred_val = predict(galaxy_loess, expand.grid(data.frame(EastWest=sort_ew, NorthSouth=sort_ns)))
 
-windows()
+external_graph()
 contour(sort_ew, sort_ns, pred_val, 
         nlevels=15, main="Contour plot of loess fit to Velocity", xlab=t1, ylab=t2)
 

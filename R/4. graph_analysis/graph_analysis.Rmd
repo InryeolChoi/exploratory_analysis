@@ -19,10 +19,10 @@ rm(list=ls())
 
     -   numeric, character, factor, numeric, numeric
 
-    ```{r}
-    class = c("numeric", "character", "factor", "numeric", "numeric")
-    pollution = read.csv("../../dataset/avgpm25.csv", colClasses = class)
-    ```
+```{r}
+class = c("numeric", "character", "factor", "numeric", "numeric")
+pollution = read.csv("../../dataset/avgpm25.csv", colClasses = class)
+```
 
 > 이후 구조를 확인한다.
 

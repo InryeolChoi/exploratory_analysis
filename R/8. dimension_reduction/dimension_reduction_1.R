@@ -1,10 +1,15 @@
-# 14. 차원축소 1
-### 데이터 준비하기
+# 데이터 준비하기
 rm(list=ls())
-setwd("C:/Users/dlsfu/Desktop/EDA_rawData")
-
 set.seed(12345)
 dataMat = matrix(rnorm(400), nrow = 40)
+
+# 그래프 함수
+external_graph = function() {
+    os = Sys.info()["sysname"]
+    if (os == "Linux") {x11()}
+    else if (os == "Darwin") {quartz()}
+    else if (os == "Windows") {windows()}
+}
 
 # 원본 데이터
 image(1:10, 1:40, t(dataMat)[, nrow(dataMat):1])
@@ -51,7 +56,7 @@ for(i in 1:dim(ordered)[1]){
 }
 svd2 = svd(const)
 
-windows()
+external_graph()
 par(mfrow=c(1, 3))
 image(t(const)[, nrow(const):1], 
       main="original data")
@@ -92,7 +97,7 @@ hh2 = hclust(dist(dataMat2))
 ordered2 = dataMat2[hh2$order, ]
 
 # 시각화
-windows()
+external_graph()
 par(mfrow=c(1,3))
 image(t(ordered2)[, nrow(ordered2):1])
 plot(rep(c(0, 1), each=5), pch=19, 
@@ -104,7 +109,7 @@ plot(rep(c(0, 1), 5), pch=19,
 
 # 특이값 벡터 비교
 svd3 = svd(scale(ordered2))
-windows()
+external_graph()
 par(mfrow=c(1, 2))
 plot(svd3$v[, 1], pch=19, 
      xlab="column",
@@ -146,7 +151,7 @@ approx1 = u[, 1] %*% t(v[, 1]) * d[1]
 approx5 = u[, 1:5] %*% diag(d[1:5]) %*% t(v[, 1:5])
 approx10 = u[, 1:10] %*% diag(d[1:10]) %*% t(v[, 1:10])
 
-windows()
+external_graph()
 par(mfrow=c(1, 4))
 image(t(approx1)[, nrow(approx1):1], main="1 vector")
 image(t(approx5)[, nrow(approx5):1], main="5 vector")

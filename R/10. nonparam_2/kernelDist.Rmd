@@ -110,7 +110,6 @@ d$bw # 커널의 대역폭
 커널의 히스토그램과 실제 데이터를 비교해보자.
 ```{r}
 # 커널의 히스토그램과 실제 데이터
-windows()
 par(mfrow = c(1, 2))
 plot(d, main="Kernel density of Galaxy")
 hist(EastWest, freq=F, main="Galaxy Data", 

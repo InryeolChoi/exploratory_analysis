@@ -1,22 +1,27 @@
-# 14. 차원축소 2
 rm(list=ls())
-setwd("C:/Users/dlsfu/Desktop/EDA_rawData")
-load("stockreturns.RData")
+load("../../stockreturns.RData")
 mu = matrix(apply(stocks, 2, mean), dim(stocks)[1], dim(stocks)[2], byrow=T)
 sig = matrix(apply(stocks, 2,sd), dim(stocks)[1], dim(stocks)[2], byrow=T)
 
 stocks_new = (stocks - mu) / sig
 
+# 그래프 함수
+external_graph = function() {
+    os = Sys.info()["sysname"]
+    if (os == "Linux") {x11()}
+    else if (os == "Darwin") {quartz()}
+    else if (os == "Windows") {windows()}
+}
+
 ### PCA: stock data 1
 stock_pca1 = prcomp(stocks)
 stock_pca2 = prcomp(stocks_new)
 
-windows()
 par(mfrow=c(1, 2))
 screeplot(stock_pca1)
 screeplot(stock_pca2)
 
-windows()
+external_graph()
 par(mfrow=c(1, 2))
 biplot(stock_pca1, 1:2)
 abline(h=0, lty=3, col='red')
@@ -27,7 +32,7 @@ abline(v=0, lty=3, col='red')
 
 
 # biplot()
-windows()
+external_graph()
 par(mfrow=c(1, 2))
 with(stock_pca1, plot(rotation[, 1], rotation[, 2], type='n', xlab='PC1', ylab='PC2'))
 with(stock_pca1, text(rotation[, 1], rotation[, 2], 1:10))
@@ -68,7 +73,7 @@ text2 = "Stocks (Varimax)"
 text3 = "Stocks (Promax)"
 
 ## 새 창 만들기 
-windows()
+external_graph()
 par(mfcol=c(2,3))
 
 # 회전없이 갈 때
@@ -115,7 +120,7 @@ abline(h=0)
 
 # 요인점수 시각화
 text = "Stocks (No rotation)"
-windows()
+external_graph()
 par(mfrow=c(1, 2))
 with(stock_fa, plot(scores[, 1], scores[, 2], xlim=c(-4, 4), 
 ylim=c(-4,4), main=text, 
