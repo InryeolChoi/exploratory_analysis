@@ -5,10 +5,16 @@
 * Python의 경우, ipynb를 이용해 설치
 
 # 내용
-## 1. 
-## 2. 
-## 3. 
-## 4. 
+1. files
+2. dataframe
+3. basic checklist
+4. graph analysis
+5. hierarchical clustering
+6. kmeans clustering
+7. data restructuring
+8. dimension reduction
+9. spline methods
+10. kernel distribution estimation
 
 
 # 실행방법
