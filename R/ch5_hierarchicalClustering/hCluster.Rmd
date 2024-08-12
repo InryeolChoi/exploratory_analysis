@@ -84,7 +84,6 @@ plot(x, y, col="blue", pch=19, cex=2, main="Data")
 text(x+0.05, y+0.05, labels=as.character(1:12))
 points(x[ind1[1, ]], y[ind1[1, ]], col="orange", pch=19, cex=2)
 plot(cutDendro$lower[[11]], yaxt="n", main="Begin building tree")
-
 ```
 
 
